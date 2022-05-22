@@ -46,23 +46,67 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  */
 public class Reflector {
 
+  /**
+   * 对应的类
+   */
   private final Class<?> type;
+  /**
+   * 可读属性数组
+   */
   private final String[] readablePropertyNames;
+  /**
+   * 可写属性集合
+   */
   private final String[] writeablePropertyNames;
-  private final Map<String, Invoker> setMethods = new HashMap<String, Invoker>();
-  private final Map<String, Invoker> getMethods = new HashMap<String, Invoker>();
-  private final Map<String, Class<?>> setTypes = new HashMap<String, Class<?>>();
-  private final Map<String, Class<?>> getTypes = new HashMap<String, Class<?>>();
+  /**
+   * 属性对应的 setting 方法的映射。
+   *
+   * key 为属性名称
+   * value 为 Invoker 对象
+   */
+  private final Map<String, Invoker> setMethods = new HashMap<>();
+  /**
+   * 属性对应的 getting 方法的映射。
+   *
+   * key 为属性名称
+   * value 为 Invoker 对象
+   */
+  private final Map<String, Invoker> getMethods = new HashMap<>();
+  /**
+   * 属性对应的 setting 方法的方法参数类型的映射。{@link #setMethods}
+   *
+   * key 为属性名称
+   * value 为方法参数类型
+   */
+  private final Map<String, Class<?>> setTypes = new HashMap<>();
+  /**
+   * 属性对应的 getting 方法的返回值类型的映射。{@link #getMethods}
+   *
+   * key 为属性名称
+   * value 为返回值的类型
+   */
+  private final Map<String, Class<?>> getTypes = new HashMap<>();
+  /**
+   * 默认构造方法
+   */
   private Constructor<?> defaultConstructor;
-
-  private Map<String, String> caseInsensitivePropertyMap = new HashMap<String, String>();
+  /**
+   * 不区分大小写的属性集合
+   */
+  private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
   public Reflector(Class<?> clazz) {
+    // 设置对应的类
     type = clazz;
+    // <1> 初始化 defaultConstructor
     addDefaultConstructor(clazz);
+    // <2> // 初始化 getMethods 和 getTypes ，通过遍历 getting 方法
     addGetMethods(clazz);
+    // <3> // 初始化 setMethods 和 setTypes ，通过遍历 setting 方法。
     addSetMethods(clazz);
+    // <4> // 初始化 getMethods + getTypes 和 setMethods + setTypes ，通过遍历 fields 属性。
     addFields(clazz);
+    // <5> 初始化 readablePropertyNames、writeablePropertyNames、caseInsensitivePropertyMap 属性
     readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
     writeablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
     for (String propName : readablePropertyNames) {
@@ -74,9 +118,13 @@ public class Reflector {
   }
 
   private void addDefaultConstructor(Class<?> clazz) {
+    // 获得所有构造方法
     Constructor<?>[] consts = clazz.getDeclaredConstructors();
+    // 遍历所有构造方法，查找无参的构造方法
     for (Constructor<?> constructor : consts) {
+      // 判断无参的构造方法
       if (constructor.getParameterTypes().length == 0) {
+        // 设置构造方法可以访问，避免是 private 等修饰符
         if (canAccessPrivateMethods()) {
           try {
             constructor.setAccessible(true);
@@ -84,6 +132,7 @@ public class Reflector {
             // Ignored. This is only a final precaution, nothing we can do.
           }
         }
+        // 如果构造方法可以访问，赋值给 defaultConstructor
         if (constructor.isAccessible()) {
           this.defaultConstructor = constructor;
         }
