@@ -27,6 +27,7 @@ import org.apache.ibatis.reflection.invoker.Invoker;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
+ * 继承 BaseWrapper 抽象类，普通对象的 ObjectWrapper 实现类，例如 User、Order 这样的 POJO 类
  * @author Clinton Begin
  */
 public class BeanWrapper extends BaseWrapper {
@@ -37,15 +38,20 @@ public class BeanWrapper extends BaseWrapper {
   public BeanWrapper(MetaObject metaObject, Object object) {
     super(metaObject);
     this.object = object;
+    // 创建 MetaClass 对象
     this.metaClass = MetaClass.forClass(object.getClass(), metaObject.getReflectorFactory());
   }
 
   @Override
   public Object get(PropertyTokenizer prop) {
+    // <1> 获得集合类型的属性的指定位置的值
     if (prop.getIndex() != null) {
+      // 获得集合类型的属性
       Object collection = resolveCollection(prop, object);
+      // 获得指定位置的值
       return getCollectionValue(prop, collection);
     } else {
+      // <2> 获得属性的值
       return getBeanProperty(prop, object);
     }
   }
