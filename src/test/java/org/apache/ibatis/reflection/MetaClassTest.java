@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.domain.misc.CustomBeanWrapperFactory;
 import org.apache.ibatis.domain.misc.RichType;
 import org.apache.ibatis.domain.misc.generics.GenericConcrete;
 import org.junit.Test;
@@ -141,4 +142,22 @@ public class MetaClassTest {
     assertEquals("richField", meta.findProperty("RICHfield"));
   }
 
+  /**
+   * 测试：getGetterType方法
+   * richType.richMap.nihao ，其中 richMap 是 Map 类型，而 nihao 的类型，需要获得到 nihao 的具体值，才能做真正的判断
+   */
+  @Test
+  public void testGetGetterType() {
+    RichType object = new RichType();
+
+    if (true) {
+      object.setRichType(new RichType());
+      object.getRichType().setRichMap(new HashMap());
+      object.getRichType().getRichMap().put("nihao", "123");
+    }
+
+    MetaObject meta = MetaObject.forObject(object, SystemMetaObject.DEFAULT_OBJECT_FACTORY, new CustomBeanWrapperFactory(), new DefaultReflectorFactory());
+    Class<?> clazz = meta.getObjectWrapper().getGetterType("richType.richMap.nihao");
+    System.out.println(clazz);
+  }
 }
