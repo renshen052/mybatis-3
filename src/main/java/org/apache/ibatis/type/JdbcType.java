@@ -67,8 +67,15 @@ public enum JdbcType {
   SQLXML(Types.SQLXML), // JDK6
   DATETIMEOFFSET(-155); // SQL Server 2008
 
+  /**
+   * 类型编号
+   */
   public final int TYPE_CODE;
-  private static Map<Integer,JdbcType> codeLookup = new HashMap<Integer,JdbcType>();
+
+  /**
+   * 代码编号和 {@link JdbcType} 的映射
+   */
+  private static Map<Integer, JdbcType> codeLookup = new HashMap<>();
 
   static {
     for (JdbcType type : JdbcType.values()) {
