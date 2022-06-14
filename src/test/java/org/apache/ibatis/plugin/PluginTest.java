@@ -39,6 +39,10 @@ public class PluginTest {
     assertFalse("Always".equals(map.toString()));
   }
 
+  /**
+   * 提供了 AlwaysMapPlugin 示例
+   */
+  //通过 @Intercepts 和 @Signature 注解，定义了需要拦截的方法为 Map 类型、方法为 "get" 方法，方法参数为 Object.class
   @Intercepts({
       @Signature(type = Map.class, method = "get", args = {Object.class})})
   public static class AlwaysMapPlugin implements Interceptor {
@@ -49,11 +53,13 @@ public class PluginTest {
 
     @Override
     public Object plugin(Object target) {
+      //执行代理对象的创建
       return Plugin.wrap(target, this);
     }
 
     @Override
     public void setProperties(Properties properties) {
+      //若 AlwaysMapPlugin 有属性，可以从 properties 获取一些需要的属性值。
     }
   }
 

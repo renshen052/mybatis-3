@@ -24,8 +24,16 @@ import java.util.List;
  */
 public class InterceptorChain {
 
+  /**
+   * 拦截器数组
+   */
   private final List<Interceptor> interceptors = new ArrayList<Interceptor>();
 
+  /**
+   * 一共可以有四种目标对象类型可以被拦截 1）Executor；2）StatementHandler；3）ParameterHandler；4）ResultSetHandler
+   * @param target
+   * @return
+   */
   public Object pluginAll(Object target) {
     for (Interceptor interceptor : interceptors) {
       target = interceptor.plugin(target);
