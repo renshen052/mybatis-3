@@ -28,6 +28,8 @@ import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 
 /**
+ * 虚拟文件系统( Virtual File System )抽象类，用来查找指定路径下的的文件们。
+ *
  * Provides a very simple API for accessing resources within an application server.
  * 
  * @author Ben Gunter
@@ -35,10 +37,20 @@ import org.apache.ibatis.logging.LogFactory;
 public abstract class VFS {
   private static final Log log = LogFactory.getLog(VFS.class);
 
-  /** The built-in implementations. */
+  /**
+   * 内置的 VFS 实现类的数组。目前 VFS 有 JBoss6VFS 和 DefaultVFS 两个实现类。
+   *
+   * The built-in implementations.
+   *
+   *  */
   public static final Class<?>[] IMPLEMENTATIONS = { JBoss6VFS.class, DefaultVFS.class };
 
-  /** The list to which implementations are added by {@link #addImplClass(Class)}. */
+  /**
+   *  自定义的 VFS 实现类的数组
+   *
+   *  The list to which implementations are added by {@link #addImplClass(Class)}.
+   *
+   *  */
   public static final List<Class<? extends VFS>> USER_IMPLEMENTATIONS = new ArrayList<Class<? extends VFS>>();
 
   /** Singleton instance holder. */
@@ -48,11 +60,12 @@ public abstract class VFS {
     @SuppressWarnings("unchecked")
     static VFS createVFS() {
       // Try the user implementations first, then the built-ins
-      List<Class<? extends VFS>> impls = new ArrayList<Class<? extends VFS>>();
+      List<Class<? extends VFS>> impls = new ArrayList<>();
       impls.addAll(USER_IMPLEMENTATIONS);
       impls.addAll(Arrays.asList((Class<? extends VFS>[]) IMPLEMENTATIONS));
 
       // Try each implementation class until a valid one is found
+      // 创建 VFS 对象，选择最后一个符合的
       VFS vfs = null;
       for (int i = 0; vfs == null || !vfs.isValid(); i++) {
         Class<? extends VFS> impl = impls.get(i);
@@ -61,13 +74,10 @@ public abstract class VFS {
           if (vfs == null || !vfs.isValid()) {
             if (log.isDebugEnabled()) {
               log.debug("VFS implementation " + impl.getName() +
-                  " is not valid in this environment.");
+                      " is not valid in this environment.");
             }
           }
-        } catch (InstantiationException e) {
-          log.error("Failed to instantiate " + impl, e);
-          return null;
-        } catch (IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
           log.error("Failed to instantiate " + impl, e);
           return null;
         }
@@ -82,6 +92,7 @@ public abstract class VFS {
   }
 
   /**
+   * 获得 VFS 单例。
    * Get the singleton {@link VFS} instance. If no {@link VFS} implementation can be found for the
    * current environment, then this method returns null.
    */
