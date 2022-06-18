@@ -30,22 +30,23 @@ public class Slf4jImpl implements Log {
   private Log log;
 
   public Slf4jImpl(String clazz) {
+    // 使用 SLF LoggerFactory 获得 SLF Logger 对象
     Logger logger = LoggerFactory.getLogger(clazz);
 
+    // 如果是 LocationAwareLogger ，则创建 Slf4jLocationAwareLoggerImpl 对象
     if (logger instanceof LocationAwareLogger) {
       try {
         // check for slf4j >= 1.6 method signature
         logger.getClass().getMethod("log", Marker.class, String.class, int.class, String.class, Object[].class, Throwable.class);
         log = new Slf4jLocationAwareLoggerImpl((LocationAwareLogger) logger);
         return;
-      } catch (SecurityException e) {
-        // fail-back to Slf4jLoggerImpl
-      } catch (NoSuchMethodException e) {
+      } catch (SecurityException | NoSuchMethodException e) {
         // fail-back to Slf4jLoggerImpl
       }
     }
 
     // Logger is not LocationAwareLogger or slf4j version < 1.6
+    // 否则，创建 Slf4jLoggerImpl 对象
     log = new Slf4jLoggerImpl(logger);
   }
 
