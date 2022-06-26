@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 /**
+ * 为 SQL 操作解析后的映射。
  * TODO fillme.
  */
 package org.apache.ibatis.mapping;

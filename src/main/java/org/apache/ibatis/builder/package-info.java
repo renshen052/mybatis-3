@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 /**
+ * 配置解析过程
  * Base package for the Configuration building code
  */
 package org.apache.ibatis.builder;
