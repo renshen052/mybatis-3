@@ -151,10 +151,16 @@ public class Configuration {
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<ParameterMap>("Parameter Maps collection");
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<KeyGenerator>("Key Generators collection");
 
+  /**
+   * 已加载资源( Resource )集合
+   */
   protected final Set<String> loadedResources = new HashSet<String>();
   protected final Map<String, XNode> sqlFragments = new StrictMap<XNode>("XML fragments parsed from previous mappers");
 
   protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<XMLStatementBuilder>();
+  /**
+   * CacheRefResolver 集合
+   */
   protected final Collection<CacheRefResolver> incompleteCacheRefs = new LinkedList<CacheRefResolver>();
   protected final Collection<ResultMapResolver> incompleteResultMaps = new LinkedList<ResultMapResolver>();
   protected final Collection<MethodResolver> incompleteMethods = new LinkedList<MethodResolver>();
