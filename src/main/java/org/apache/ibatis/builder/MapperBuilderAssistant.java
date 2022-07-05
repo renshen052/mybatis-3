@@ -54,9 +54,21 @@ import org.apache.ibatis.type.TypeHandler;
  */
 public class MapperBuilderAssistant extends BaseBuilder {
 
+  /**
+   * 当前 Mapper 命名空间
+   */
   private String currentNamespace;
+  /**
+   * 资源引用的地址
+   */
   private final String resource;
+  /**
+   * 当前 Cache 对象
+   */
   private Cache currentCache;
+  /**
+   * 是否未解析成功 Cache 引用
+   */
   private boolean unresolvedCacheRef; // issue #676
 
   public MapperBuilderAssistant(Configuration configuration, String resource) {
@@ -70,15 +82,18 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   public void setCurrentNamespace(String currentNamespace) {
+    // 如果传入的 currentNamespace 参数为空，抛出 BuilderException 异常
     if (currentNamespace == null) {
       throw new BuilderException("The mapper element requires a namespace attribute to be specified.");
     }
 
+    // 如果当前已经设置，并且还和传入的不相等，抛出 BuilderException 异常
     if (this.currentNamespace != null && !this.currentNamespace.equals(currentNamespace)) {
       throw new BuilderException("Wrong namespace. Expected '"
-          + this.currentNamespace + "' but found '" + currentNamespace + "'.");
+              + this.currentNamespace + "' but found '" + currentNamespace + "'.");
     }
 
+    // 设置
     this.currentNamespace = currentNamespace;
   }
 
@@ -108,13 +123,16 @@ public class MapperBuilderAssistant extends BaseBuilder {
       throw new BuilderException("cache-ref element requires a namespace attribute.");
     }
     try {
-      unresolvedCacheRef = true;
+      unresolvedCacheRef = true; // 标记未解决
+      // <1> 获得 Cache 对象
       Cache cache = configuration.getCache(namespace);
+      // 获得不到，抛出 IncompleteElementException 异常
       if (cache == null) {
         throw new IncompleteElementException("No cache for namespace '" + namespace + "' could be found.");
       }
+      // 记录当前 Cache 对象
       currentCache = cache;
-      unresolvedCacheRef = false;
+      unresolvedCacheRef = false; // 标记已解决
       return cache;
     } catch (IllegalArgumentException e) {
       throw new IncompleteElementException("No cache for namespace '" + namespace + "' could be found.", e);
@@ -128,16 +146,19 @@ public class MapperBuilderAssistant extends BaseBuilder {
       boolean readWrite,
       boolean blocking,
       Properties props) {
+    // <1> 创建 Cache 对象
     Cache cache = new CacheBuilder(currentNamespace)
-        .implementation(valueOrDefault(typeClass, PerpetualCache.class))
-        .addDecorator(valueOrDefault(evictionClass, LruCache.class))
-        .clearInterval(flushInterval)
-        .size(size)
-        .readWrite(readWrite)
-        .blocking(blocking)
-        .properties(props)
-        .build();
+            .implementation(valueOrDefault(typeClass, PerpetualCache.class))
+            .addDecorator(valueOrDefault(evictionClass, LruCache.class))
+            .clearInterval(flushInterval)
+            .size(size)
+            .readWrite(readWrite)
+            .blocking(blocking)
+            .properties(props)
+            .build();
+    // <2> 添加到 configuration 的 caches 中
     configuration.addCache(cache);
+    // <3> 赋值给 currentCache
     currentCache = cache;
     return cache;
   }
