@@ -394,9 +394,12 @@ public class MapperBuilderAssistant extends BaseBuilder {
       String resultSet,
       String foreignColumn,
       boolean lazy) {
+    // <1> 解析对应的 Java Type 类和 TypeHandler 对象
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
+    // <2> 解析组合字段名称成 ResultMapping 集合。涉及「关联的嵌套查询」
     List<ResultMapping> composites = parseCompositeColumnName(column);
+    // <3> 创建 ResultMapping 对象
     return new ResultMapping.Builder(configuration, property, column, javaTypeClass)
         .jdbcType(jdbcType)
         .nestedQueryId(applyCurrentNamespace(nestedSelect, true))
