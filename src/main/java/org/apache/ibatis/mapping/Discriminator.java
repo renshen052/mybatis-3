@@ -25,7 +25,16 @@ import org.apache.ibatis.session.Configuration;
  */
 public class Discriminator {
 
+  /**
+   * ResultMapping 对象
+   */
   private ResultMapping resultMapping;
+  /**
+   * 集合。即注释上的 N 条示例
+   *
+   * KEY ：value 属性
+   * VALUE ：resultMap 属性
+   */
   private Map<String, String> discriminatorMap;
 
   Discriminator() {
@@ -43,7 +52,7 @@ public class Discriminator {
       assert discriminator.resultMapping != null;
       assert discriminator.discriminatorMap != null;
       assert !discriminator.discriminatorMap.isEmpty();
-      //lock down map
+      // lock down map 生成不可变集合，避免修改
       discriminator.discriminatorMap = Collections.unmodifiableMap(discriminator.discriminatorMap);
       return discriminator;
     }
