@@ -518,9 +518,11 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   public LanguageDriver getLanguageDriver(Class<?> langClass) {
+    // 获得 langClass 类
     if (langClass != null) {
       configuration.getLanguageRegistry().register(langClass);
     } else {
+      // 如果为空，则使用默认类
       langClass = configuration.getLanguageRegistry().getDefaultDriverClass();
     }
     return configuration.getLanguageRegistry().getDriver(langClass);
