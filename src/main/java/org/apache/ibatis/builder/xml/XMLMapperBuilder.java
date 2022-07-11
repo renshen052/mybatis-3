@@ -308,7 +308,6 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private ResultMap resultMapElement(XNode resultMapNode, List<ResultMapping> additionalResultMappings) throws Exception {
-    //TODO 看到这里
     ErrorContext.instance().activity("processing " + resultMapNode.getValueBasedIdentifier());
     // <1> 获得 id 属性
     String id = resultMapNode.getStringAttribute("id",
