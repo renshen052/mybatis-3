@@ -168,6 +168,9 @@ public class Configuration {
    */
   protected final Collection<CacheRefResolver> incompleteCacheRefs = new LinkedList<CacheRefResolver>();
   protected final Collection<ResultMapResolver> incompleteResultMaps = new LinkedList<ResultMapResolver>();
+  /**
+   * 未完成的 MethodResolver 集合
+   */
   protected final Collection<MethodResolver> incompleteMethods = new LinkedList<MethodResolver>();
 
   /*

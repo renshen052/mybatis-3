@@ -94,15 +94,25 @@ import org.apache.ibatis.type.UnknownTypeHandler;
  */
 public class MapperAnnotationBuilder {
 
+  /**
+   * SQL 操作注解集合
+   */
   private final Set<Class<? extends Annotation>> sqlAnnotationTypes = new HashSet<Class<? extends Annotation>>();
+  /**
+   * SQL 操作提供者注解集合
+   */
   private final Set<Class<? extends Annotation>> sqlProviderAnnotationTypes = new HashSet<Class<? extends Annotation>>();
 
   private final Configuration configuration;
   private final MapperBuilderAssistant assistant;
+  /**
+   * Mapper 接口类
+   */
   private final Class<?> type;
 
   public MapperAnnotationBuilder(Configuration configuration, Class<?> type) {
     String resource = type.getName().replace('.', '/') + ".java (best guess)";
+    // 创建 MapperBuilderAssistant 对象
     this.assistant = new MapperBuilderAssistant(configuration, resource);
     this.configuration = configuration;
     this.type = type;
@@ -119,25 +129,35 @@ public class MapperAnnotationBuilder {
   }
 
   public void parse() {
+    // <1> 判断当前 Mapper 接口是否应加载过。
     String resource = type.toString();
     if (!configuration.isResourceLoaded(resource)) {
+      // <2> 加载对应的 XML Mapper
       loadXmlResource();
+      // <3> 标记该 Mapper 接口已经加载过
       configuration.addLoadedResource(resource);
+      // <4> 设置 namespace 属性
       assistant.setCurrentNamespace(type.getName());
+      // <5> 解析 @CacheNamespace 注解
       parseCache();
+      // <6> 解析 @CacheNamespaceRef 注解
       parseCacheRef();
+      // <7> 遍历每个方法，解析其上的注解
       Method[] methods = type.getMethods();
       for (Method method : methods) {
         try {
           // issue #237
           if (!method.isBridge()) {
+            // <7.1> 执行解析
             parseStatement(method);
           }
         } catch (IncompleteElementException e) {
+          // <7.2> 解析失败，添加到 configuration 中
           configuration.addIncompleteMethod(new MethodResolver(this, method));
         }
       }
     }
+    // <8> 解析待定的方法
     parsePendingMethods();
   }
 
@@ -160,14 +180,22 @@ public class MapperAnnotationBuilder {
     // Spring may not know the real resource name so we check a flag
     // to prevent loading again a resource twice
     // this flag is set at XMLMapperBuilder#bindMapperForNamespace
+    // <1> 判断 Mapper XML 是否已经加载过，如果加载过，就不加载了。
+    // 此处，是为了避免和 XMLMapperBuilder#parse() 方法冲突，重复解析
     if (!configuration.isResourceLoaded("namespace:" + type.getName())) {
+      // <2> 获得 InputStream 对象
       String xmlResource = type.getName().replace('.', '/') + ".xml";
-      InputStream inputStream = null;
-      try {
-        inputStream = Resources.getResourceAsStream(type.getClassLoader(), xmlResource);
-      } catch (IOException e) {
-        // ignore, resource is not required
+      // #1347
+      InputStream inputStream = type.getResourceAsStream("/" + xmlResource);
+      if (inputStream == null) {
+        // Search XML mapper that is not in the module but in the classpath.
+        try {
+          inputStream = Resources.getResourceAsStream(type.getClassLoader(), xmlResource);
+        } catch (IOException e2) {
+          // ignore, resource is not required
+        }
       }
+      // <2> 创建 XMLMapperBuilder 对象，执行解析
       if (inputStream != null) {
         XMLMapperBuilder xmlParser = new XMLMapperBuilder(inputStream, assistant.getConfiguration(), xmlResource, configuration.getSqlFragments(), type.getName());
         xmlParser.parse();
@@ -176,11 +204,15 @@ public class MapperAnnotationBuilder {
   }
 
   private void parseCache() {
+    // <1> 获得类上的 @CacheNamespace 注解
     CacheNamespace cacheDomain = type.getAnnotation(CacheNamespace.class);
     if (cacheDomain != null) {
+      // <2> 获得各种属性
       Integer size = cacheDomain.size() == 0 ? null : cacheDomain.size();
       Long flushInterval = cacheDomain.flushInterval() == 0 ? null : cacheDomain.flushInterval();
+      // <3> 获得 Properties 属性
       Properties props = convertToProperties(cacheDomain.properties());
+      // <4> 创建 Cache 对象
       assistant.useNewCache(cacheDomain.implementation(), cacheDomain.eviction(), flushInterval, size, cacheDomain.readWrite(), cacheDomain.blocking(), props);
     }
   }
@@ -198,17 +230,23 @@ public class MapperAnnotationBuilder {
   }
 
   private void parseCacheRef() {
+    // 获得类上的 @CacheNamespaceRef 注解
     CacheNamespaceRef cacheDomainRef = type.getAnnotation(CacheNamespaceRef.class);
     if (cacheDomainRef != null) {
+      // <2> 获得各种属性
       Class<?> refType = cacheDomainRef.value();
       String refName = cacheDomainRef.name();
+      // <2> 校验，如果 refType 和 refName 都为空，则抛出 BuilderException 异常
       if (refType == void.class && refName.isEmpty()) {
         throw new BuilderException("Should be specified either value() or name() attribute in the @CacheNamespaceRef");
       }
+      // <2> 校验，如果 refType 和 refName 都不为空，则抛出 BuilderException 异常
       if (refType != void.class && !refName.isEmpty()) {
         throw new BuilderException("Cannot use both value() and name() attribute in the @CacheNamespaceRef");
       }
+      // <2> 获得最终的 namespace 属性
       String namespace = (refType != void.class) ? refType.getName() : refName;
+      // <3> 获得指向的 Cache 对象
       assistant.useCacheRef(namespace);
     }
   }
@@ -284,41 +322,52 @@ public class MapperAnnotationBuilder {
   }
 
   void parseStatement(Method method) {
+    //TODO 看到这里    主体结构看完了， 该看里面的细节函数
+    // <1> 获得参数的类型
     Class<?> parameterTypeClass = getParameterType(method);
+    // <2> 获得 LanguageDriver 对象
     LanguageDriver languageDriver = getLanguageDriver(method);
+    // <3> 获得 SqlSource 对象
     SqlSource sqlSource = getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);
     if (sqlSource != null) {
+      // <4> 获得各种属性
       Options options = method.getAnnotation(Options.class);
       final String mappedStatementId = type.getName() + "." + method.getName();
       Integer fetchSize = null;
       Integer timeout = null;
       StatementType statementType = StatementType.PREPARED;
-      ResultSetType resultSetType = ResultSetType.FORWARD_ONLY;
+      ResultSetType resultSetType = null;
       SqlCommandType sqlCommandType = getSqlCommandType(method);
       boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
       boolean flushCache = !isSelect;
       boolean useCache = isSelect;
 
+      // <5> 获得 KeyGenerator 对象
       KeyGenerator keyGenerator;
-      String keyProperty = "id";
+      String keyProperty = null;
       String keyColumn = null;
-      if (SqlCommandType.INSERT.equals(sqlCommandType) || SqlCommandType.UPDATE.equals(sqlCommandType)) {
+      if (SqlCommandType.INSERT.equals(sqlCommandType) || SqlCommandType.UPDATE.equals(sqlCommandType)) { // 有
         // first check for SelectKey annotation - that overrides everything else
+        // <5.1> 如果有 @SelectKey 注解，则进行处理
         SelectKey selectKey = method.getAnnotation(SelectKey.class);
         if (selectKey != null) {
           keyGenerator = handleSelectKeyAnnotation(selectKey, mappedStatementId, getParameterType(method), languageDriver);
           keyProperty = selectKey.keyProperty();
+          // <5.2> 如果无 @Options 注解，则根据全局配置处理
         } else if (options == null) {
           keyGenerator = configuration.isUseGeneratedKeys() ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
+          // <5.3> 如果有 @Options 注解，则使用该注解的配置处理
         } else {
           keyGenerator = options.useGeneratedKeys() ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
           keyProperty = options.keyProperty();
           keyColumn = options.keyColumn();
         }
+        // <5.4> 无
       } else {
         keyGenerator = NoKeyGenerator.INSTANCE;
       }
 
+      // <6> 初始化各种属性
       if (options != null) {
         if (FlushCachePolicy.TRUE.equals(options.flushCache())) {
           flushCache = true;
@@ -332,7 +381,9 @@ public class MapperAnnotationBuilder {
         resultSetType = options.resultSetType();
       }
 
+      // <7> 获得 resultMapId 编号字符串
       String resultMapId = null;
+      // <7.1> 如果有 @ResultMap 注解，使用该注解为 resultMapId 属性
       ResultMap resultMapAnnotation = method.getAnnotation(ResultMap.class);
       if (resultMapAnnotation != null) {
         String[] resultMaps = resultMapAnnotation.value();
@@ -344,35 +395,37 @@ public class MapperAnnotationBuilder {
           sb.append(resultMap);
         }
         resultMapId = sb.toString();
+        // <7.2> 如果无 @ResultMap 注解，解析其它注解，作为 resultMapId 属性
       } else if (isSelect) {
         resultMapId = parseResultMap(method);
       }
 
+      // 构建 MappedStatement 对象
       assistant.addMappedStatement(
-          mappedStatementId,
-          sqlSource,
-          statementType,
-          sqlCommandType,
-          fetchSize,
-          timeout,
-          // ParameterMapID
-          null,
-          parameterTypeClass,
-          resultMapId,
-          getReturnType(method),
-          resultSetType,
-          flushCache,
-          useCache,
-          // TODO gcode issue #577
-          false,
-          keyGenerator,
-          keyProperty,
-          keyColumn,
-          // DatabaseID
-          null,
-          languageDriver,
-          // ResultSets
-          options != null ? nullOrEmpty(options.resultSets()) : null);
+              mappedStatementId,
+              sqlSource,
+              statementType,
+              sqlCommandType,
+              fetchSize,
+              timeout,
+              // ParameterMapID
+              null,
+              parameterTypeClass,
+              resultMapId,
+              getReturnType(method), // 获得返回类型
+              resultSetType,
+              flushCache,
+              useCache,
+              // TODO gcode issue #577
+              false,
+              keyGenerator,
+              keyProperty,
+              keyColumn,
+              // DatabaseID
+              null,
+              languageDriver,
+              // ResultSets
+              options != null ? nullOrEmpty(options.resultSets()) : null);
     }
   }
   
