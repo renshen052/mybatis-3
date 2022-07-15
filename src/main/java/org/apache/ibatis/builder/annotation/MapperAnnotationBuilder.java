@@ -430,16 +430,23 @@ public class MapperAnnotationBuilder {
   }
   
   private LanguageDriver getLanguageDriver(Method method) {
+    // 解析 @Lang 注解，获得对应的类型
     Lang lang = method.getAnnotation(Lang.class);
     Class<?> langClass = null;
     if (lang != null) {
       langClass = lang.value();
     }
+    // 获得 LanguageDriver 对象
+    // 如果 langClass 为空，即无 @Lang 注解，则会使用默认 LanguageDriver 类型
     return assistant.getLanguageDriver(langClass);
   }
 
   private Class<?> getParameterType(Method method) {
     Class<?> parameterType = null;
+    // 遍历参数类型数组
+    // 排除 RowBounds 和 ResultHandler 两种参数
+    // 1. 如果是多参数，则是 ParamMap 类型
+    // 2. 如果是单参数，则是该参数的类型
     Class<?>[] parameterTypes = method.getParameterTypes();
     for (Class<?> currentParameterType : parameterTypes) {
       if (!RowBounds.class.isAssignableFrom(currentParameterType) && !ResultHandler.class.isAssignableFrom(currentParameterType)) {
@@ -449,6 +456,7 @@ public class MapperAnnotationBuilder {
           // issue #135
           parameterType = ParamMap.class;
         }
+        // 这里直接 break 走会更好吧
       }
     }
     return parameterType;
@@ -507,19 +515,29 @@ public class MapperAnnotationBuilder {
 
   private SqlSource getSqlSourceFromAnnotations(Method method, Class<?> parameterType, LanguageDriver languageDriver) {
     try {
+      // <1.1> <1.2> 获得方法上的 SQL_ANNOTATION_TYPES 和 SQL_PROVIDER_ANNOTATION_TYPES 对应的类型
       Class<? extends Annotation> sqlAnnotationType = getSqlAnnotationType(method);
       Class<? extends Annotation> sqlProviderAnnotationType = getSqlProviderAnnotationType(method);
+      // <2> 如果 SQL_ANNOTATION_TYPES 对应的类型非空
       if (sqlAnnotationType != null) {
+        // 如果 SQL_PROVIDER_ANNOTATION_TYPES 对应的类型非空，则抛出 BindingException 异常，因为冲突了。
         if (sqlProviderAnnotationType != null) {
           throw new BindingException("You cannot supply both a static SQL and SqlProvider to method named " + method.getName());
         }
+        // <2.1> 获得 SQL_ANNOTATION_TYPES 对应的注解
         Annotation sqlAnnotation = method.getAnnotation(sqlAnnotationType);
+        // <2.2> 获得 value 属性
         final String[] strings = (String[]) sqlAnnotation.getClass().getMethod("value").invoke(sqlAnnotation);
+        // <2.3> 创建 SqlSource 对象
         return buildSqlSourceFromStrings(strings, parameterType, languageDriver);
+        // <3> 如果 SQL_PROVIDER_ANNOTATION_TYPES 对应的类型非空
       } else if (sqlProviderAnnotationType != null) {
+        // <3.1> 获得 SQL_PROVIDER_ANNOTATION_TYPES 对应的注解
         Annotation sqlProviderAnnotation = method.getAnnotation(sqlProviderAnnotationType);
+        // <3.2> 创建 ProviderSqlSource 对象
         return new ProviderSqlSource(assistant.getConfiguration(), sqlProviderAnnotation, type, method);
       }
+      // <4> 返回空
       return null;
     } catch (Exception e) {
       throw new BuilderException("Could not find value method on SQL annotation.  Cause: " + e, e);
@@ -527,11 +545,14 @@ public class MapperAnnotationBuilder {
   }
 
   private SqlSource buildSqlSourceFromStrings(String[] strings, Class<?> parameterTypeClass, LanguageDriver languageDriver) {
+    // <1> 拼接 SQL
+    //使用 " " 空格分隔。因为，@Select 等注解，value 属性是个数组。
     final StringBuilder sql = new StringBuilder();
     for (String fragment : strings) {
       sql.append(fragment);
       sql.append(" ");
     }
+    // <2> 创建 SqlSource 对象
     return languageDriver.createSqlSource(configuration, sql.toString().trim(), parameterTypeClass);
   }
 
@@ -567,6 +588,13 @@ public class MapperAnnotationBuilder {
     return chooseAnnotationType(method, sqlProviderAnnotationTypes);
   }
 
+  /**
+   * 获得符合指定类型的注解类型
+   *
+   * @param method 方法
+   * @param types 指定类型
+   * @return 查到的注解类型
+   */
   private Class<? extends Annotation> chooseAnnotationType(Method method, Set<Class<? extends Annotation>> types) {
     for (Class<? extends Annotation> type : types) {
       Annotation annotation = method.getAnnotation(type);
@@ -675,6 +703,7 @@ public class MapperAnnotationBuilder {
   }
 
   private KeyGenerator handleSelectKeyAnnotation(SelectKey selectKeyAnnotation, String baseStatementId, Class<?> parameterTypeClass, LanguageDriver languageDriver) {
+    //TODO 看到这里   http://svip.iocoder.cn/MyBatis/builder-package-4/
     String id = baseStatementId + SelectKeyGenerator.SELECT_KEY_SUFFIX;
     Class<?> resultTypeClass = selectKeyAnnotation.resultType();
     StatementType statementType = selectKeyAnnotation.statementType();
