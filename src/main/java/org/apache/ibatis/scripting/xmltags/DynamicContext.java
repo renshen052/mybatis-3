@@ -27,9 +27,12 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * 用于每次执行 SQL 操作时，记录动态 SQL 处理后的最终 SQL 字符串
  * @author Clinton Begin
  */
 public class DynamicContext {
+
+  //TODO  看到这里 5.1 构造方法   http://svip.iocoder.cn/MyBatis/scripting-1/
 
   public static final String PARAMETER_OBJECT_KEY = "_parameter";
   public static final String DATABASE_ID_KEY = "_databaseId";

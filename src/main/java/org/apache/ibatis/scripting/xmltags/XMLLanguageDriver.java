@@ -49,8 +49,6 @@ public class XMLLanguageDriver implements LanguageDriver {
   @Override
   public SqlSource createSqlSource(Configuration configuration, String script, Class<?> parameterType) {
 
-    // TODO  看到这里了 ，该看细节了    http://svip.iocoder.cn/MyBatis/scripting-1/#1-%E6%A6%82%E8%BF%B0
-
     // issue #3
     // <1> 如果是 <script> 开头，使用 XML 配置的方式，使用动态 SQL
     if (script.startsWith("<script>")) {
