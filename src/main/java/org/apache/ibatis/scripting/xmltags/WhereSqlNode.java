@@ -24,7 +24,6 @@ import org.apache.ibatis.session.Configuration;
  * @author Clinton Begin
  */
 public class WhereSqlNode extends TrimSqlNode {
-  //TODO  看到这里 http://svip.iocoder.cn/MyBatis/scripting-1/#6-3-WhereSqlNode
 
   private static List<String> prefixList = Arrays.asList("AND ","OR ","AND\n", "OR\n", "AND\r", "OR\r", "AND\t", "OR\t");
 
