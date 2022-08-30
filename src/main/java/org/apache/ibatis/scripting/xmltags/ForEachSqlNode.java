@@ -60,7 +60,7 @@ public class ForEachSqlNode implements SqlNode {
 
   @Override
   public boolean apply(DynamicContext context) {
-    //TODO 看到这里     这里需要仔细看 然后调试一下  http://svip.iocoder.cn/MyBatis/scripting-1/#6-5-2-apply
+    //TODO 这里需要仔细看 然后调试一下  http://svip.iocoder.cn/MyBatis/scripting-1/#6-5-2-apply 【暂时跳过】
     Map<String, Object> bindings = context.getBindings();
     // <1> 获得遍历的集合的 Iterable 对象，用于遍历。
     final Iterable<?> iterable = evaluator.evaluateIterable(collectionExpression, bindings);
