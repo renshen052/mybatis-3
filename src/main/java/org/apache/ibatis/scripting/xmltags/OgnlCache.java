@@ -32,6 +32,12 @@ import org.apache.ibatis.builder.BuilderException;
  */
 public final class OgnlCache {
 
+  /**
+   * 表达式的缓存的映射
+   *
+   * KEY：表达式
+   * VALUE：表达式的缓存 @see #parseExpression(String)
+   */
   private static final Map<String, Object> expressionCache = new ConcurrentHashMap<String, Object>();
 
   private OgnlCache() {
@@ -40,7 +46,10 @@ public final class OgnlCache {
 
   public static Object getValue(String expression, Object root) {
     try {
+      // <1> 创建 OGNL Context 对象
       Map<Object, OgnlClassResolver> context = Ognl.createDefaultContext(root, new OgnlClassResolver());
+      // <2> 解析表达式
+      // <3> 获得表达式对应的值
       return Ognl.getValue(parseExpression(expression), context, root);
     } catch (OgnlException e) {
       throw new BuilderException("Error evaluating expression '" + expression + "'. Cause: " + e, e);

@@ -22,6 +22,7 @@ package org.apache.ibatis.mapping;
  * @author Clinton Begin
  */
 public interface SqlSource {
+  //TODO  http://svip.iocoder.cn/MyBatis/scripting-2/ 该看这里了
 
   BoundSql getBoundSql(Object parameterObject);
 
