@@ -27,4 +27,7 @@
             #{id}
         </foreach>
     </select>
+    <select id="getSingleSubject" resultType="org.apache.ibatis.amytest.MyPrimitiveSubject">
+            SELECT * FROM subject WHERE id = #{id}
+    </select>
 </mapper>

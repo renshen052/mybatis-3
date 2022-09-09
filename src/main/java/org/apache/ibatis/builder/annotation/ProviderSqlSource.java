@@ -29,6 +29,7 @@ import org.apache.ibatis.reflection.ParamNameResolver;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * 实现 SqlSource 接口，基于方法上的 @ProviderXXX 注解的 SqlSource 实现类
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
@@ -36,11 +37,29 @@ public class ProviderSqlSource implements SqlSource {
 
   private final Configuration configuration;
   private final SqlSourceBuilder sqlSourceParser;
+  /**
+   * `@ProviderXXX` 注解的对应的类
+   */
   private final Class<?> providerType;
+  /**
+   * `@ProviderXXX` 注解的对应的方法
+   */
   private Method providerMethod;
+  /**
+   * `@ProviderXXX` 注解的对应的方法的参数名数组
+   */
   private String[] providerMethodArgumentNames;
+  /**
+   * `@ProviderXXX` 注解的对应的方法的参数类型数组
+   */
   private Class<?>[] providerMethodParameterTypes;
+  /**
+   * 若 {@link #providerMethodParameterTypes} 参数有 ProviderContext 类型的，创建 ProviderContext 对象
+   */
   private ProviderContext providerContext;
+  /**
+   * {@link #providerMethodParameterTypes} 参数中，ProviderContext 类型的参数，在数组中的位置
+   */
   private Integer providerContextIndex;
 
   /**
@@ -58,13 +77,15 @@ public class ProviderSqlSource implements SqlSource {
     String providerMethodName;
     try {
       this.configuration = configuration;
+      // 创建 SqlSourceBuilder 对象
       this.sqlSourceParser = new SqlSourceBuilder(configuration);
+      // 获得 @ProviderXXX 注解的对应的类
       this.providerType = (Class<?>) provider.getClass().getMethod("type").invoke(provider);
+      // 获得 @ProviderXXX 注解的对应的方法相关的信息
       providerMethodName = (String) provider.getClass().getMethod("method").invoke(provider);
-
       for (Method m : this.providerType.getMethods()) {
         if (providerMethodName.equals(m.getName()) && CharSequence.class.isAssignableFrom(m.getReturnType())) {
-          if (providerMethod != null){
+          if (providerMethod != null) {
             throw new BuilderException("Error creating SqlSource for SqlProvider. Method '"
                     + providerMethodName + "' is found multiple in SqlProvider '" + this.providerType.getName()
                     + "'. Sql provider method can not overload.");
@@ -81,15 +102,16 @@ public class ProviderSqlSource implements SqlSource {
     }
     if (this.providerMethod == null) {
       throw new BuilderException("Error creating SqlSource for SqlProvider. Method '"
-          + providerMethodName + "' not found in SqlProvider '" + this.providerType.getName() + "'.");
+              + providerMethodName + "' not found in SqlProvider '" + this.providerType.getName() + "'.");
     }
-    for (int i = 0; i< this.providerMethodParameterTypes.length; i++) {
+    // 初始化 providerContext 和 providerContextIndex 属性
+    for (int i = 0; i < this.providerMethodParameterTypes.length; i++) {
       Class<?> parameterType = this.providerMethodParameterTypes[i];
       if (parameterType == ProviderContext.class) {
-        if (this.providerContext != null){
+        if (this.providerContext != null) {
           throw new BuilderException("Error creating SqlSource for SqlProvider. ProviderContext found multiple in SqlProvider method ("
-              + this.providerType.getName() + "." + providerMethod.getName()
-              + "). ProviderContext can not define multiple in SqlProvider method argument.");
+                  + this.providerType.getName() + "." + providerMethod.getName()
+                  + "). ProviderContext can not define multiple in SqlProvider method argument.");
         }
         this.providerContext = new ProviderContext(mapperType, mapperMethod);
         this.providerContextIndex = i;

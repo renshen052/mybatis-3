@@ -15,10 +15,14 @@
  */
 package org.apache.ibatis.amytest;
 
+import org.apache.ibatis.annotations.Param;
+
 import java.util.List;
 
 public interface SqlNodeMapper {
 
     List<MyPrimitiveSubject> getSubject(List<Integer> id);
+
+    MyPrimitiveSubject getSingleSubject(@Param("id") Integer id);
 
 }

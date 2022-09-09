@@ -15,7 +15,6 @@
  */
 package org.apache.ibatis.amytest;
 
-import org.apache.ibatis.autoconstructor.PrimitiveSubject;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.session.SqlSession;
@@ -52,7 +51,7 @@ public class SqlNodeTest {
     }
 
     /**
-     * 用于调试 forEach 相关的断点
+     * forEach
      */
     @Test
     public void forEachTest() {
@@ -60,10 +59,26 @@ public class SqlNodeTest {
         try {
             final SqlNodeMapper mapper = sqlSession.getMapper(SqlNodeMapper.class);
             ArrayList<Integer> idList = new ArrayList<>();
-            idList.add(1);
-            idList.add(2);
+            idList.add(3);
+            idList.add(4);
             List<MyPrimitiveSubject> subjectList = mapper.getSubject(idList);
             System.out.printf("查询结果\n" + subjectList.toString());
+        } finally {
+            sqlSession.close();
+        }
+    }
+
+    /**
+     * 查单个
+     */
+    @Test
+    public void getSingleSubjectTest() {
+        final SqlSession sqlSession = sqlSessionFactory.openSession();
+        try {
+            final SqlNodeMapper mapper = sqlSession.getMapper(SqlNodeMapper.class);
+
+            MyPrimitiveSubject subject = mapper.getSingleSubject(1);
+            System.out.printf("查询结果\n" + subject.toString());
         } finally {
             sqlSession.close();
         }
