@@ -25,6 +25,9 @@ import java.sql.SQLException;
  */
 public interface ParameterHandler {
 
+  /**
+   * @return 参数对象
+   */
   Object getParameterObject();
 
   void setParameters(PreparedStatement ps)
