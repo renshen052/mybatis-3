@@ -45,10 +45,14 @@ public class SimpleExecutor extends BaseExecutor {
     Statement stmt = null;
     try {
       Configuration configuration = ms.getConfiguration();
+      // 创建 StatementHandler 对象
       StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
+      // 初始化 StatementHandler 对象
       stmt = prepareStatement(handler, ms.getStatementLog());
+      // <3> 执行 StatementHandler ，进行写操作
       return handler.update(stmt);
     } finally {
+      // 关闭 StatementHandler 对象
       closeStatement(stmt);
     }
   }
@@ -70,13 +74,17 @@ public class SimpleExecutor extends BaseExecutor {
     }
   }
 
-  //TODO http://svip.iocoder.cn/MyBatis/executor-1/#4-3-doQueryCursor  看到这里
   @Override
   protected <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
     Configuration configuration = ms.getConfiguration();
+    // 创建 StatementHandler 对象
     StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, null, boundSql);
+    // 初始化 StatementHandler 对象
     Statement stmt = prepareStatement(handler, ms.getStatementLog());
-    return handler.<E>queryCursor(stmt);
+    // 设置 Statement ，如果执行完成，则进行自动关闭
+    stmt.closeOnCompletion();
+    // 执行 StatementHandler  ，进行读操作
+    return handler.queryCursor(stmt);
   }
 
   @Override
