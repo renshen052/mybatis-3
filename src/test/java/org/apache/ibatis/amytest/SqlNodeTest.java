@@ -17,6 +17,7 @@ package org.apache.ibatis.amytest;
 
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
+import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
@@ -82,5 +83,58 @@ public class SqlNodeTest {
         } finally {
             sqlSession.close();
         }
+    }
+
+    /**
+     * 插入
+     */
+    @Test
+    public void insert() {
+        final SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH,false);
+        final SqlSession sqlSession2 = sqlSessionFactory.openSession();
+        try {
+            final SqlNodeMapper mapper = sqlSession.getMapper(SqlNodeMapper.class);
+
+            List<MyPrimitiveSubject> myPrimitiveSubjectList = getMyPrimitiveSubject();
+            for (MyPrimitiveSubject myPrimitiveSubject : myPrimitiveSubjectList) {
+                mapper.insertSingleSubject(myPrimitiveSubject);
+            }
+            sqlSession.commit();
+
+
+
+            //输出
+            SqlNodeMapper mapper2 = sqlSession2.getMapper(SqlNodeMapper.class);
+            ArrayList<Integer> idList = new ArrayList<>();
+            idList.add(10);
+            idList.add(11);
+            List<MyPrimitiveSubject> subjectList = mapper2.getSubject(idList);
+            System.out.println(subjectList);
+        } finally {
+            sqlSession.close();
+            sqlSession2.close();
+        }
+    }
+
+    private List<MyPrimitiveSubject> getMyPrimitiveSubject(){
+        List<MyPrimitiveSubject> list = new ArrayList<>();
+        MyPrimitiveSubject myPrimitiveSubject1 = new MyPrimitiveSubject();
+        myPrimitiveSubject1.setId(10);
+        myPrimitiveSubject1.setName("");
+        myPrimitiveSubject1.setAge(0);
+        myPrimitiveSubject1.setHeight(0);
+        myPrimitiveSubject1.setWeight(0);
+
+
+        MyPrimitiveSubject myPrimitiveSubject2 = new MyPrimitiveSubject();
+        myPrimitiveSubject2.setId(11);
+        myPrimitiveSubject2.setName("");
+        myPrimitiveSubject2.setAge(0);
+        myPrimitiveSubject2.setHeight(0);
+        myPrimitiveSubject2.setWeight(0);
+
+        list.add(myPrimitiveSubject1);
+        list.add(myPrimitiveSubject2);
+        return list;
     }
 }

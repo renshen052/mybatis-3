@@ -25,4 +25,6 @@ public interface SqlNodeMapper {
 
     MyPrimitiveSubject getSingleSubject(@Param("id") Integer id);
 
+    Integer insertSingleSubject(MyPrimitiveSubject myPrimitiveSubject);
+
 }

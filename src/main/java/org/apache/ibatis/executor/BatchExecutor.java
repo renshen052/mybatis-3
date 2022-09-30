@@ -113,27 +113,42 @@ public class BatchExecutor extends BaseExecutor {
       throws SQLException {
     Statement stmt = null;
     try {
+      // <1> 刷入批处理语句
       flushStatements();
       Configuration configuration = ms.getConfiguration();
+      // 创建 StatementHandler 对象
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameterObject, rowBounds, resultHandler, boundSql);
+      // 获得 Connection 对象
       Connection connection = getConnection(ms.getStatementLog());
+      // 创建 Statement 或 PrepareStatement 对象
       stmt = handler.prepare(connection, transaction.getTimeout());
+      // 设置 SQL 上的参数，例如 PrepareStatement 对象上的占位符
       handler.parameterize(stmt);
-      return handler.<E>query(stmt, resultHandler);
+      // 执行 StatementHandler  ，进行读操作
+      return handler.query(stmt, resultHandler);
     } finally {
+      // 关闭 StatementHandler 对象
       closeStatement(stmt);
     }
   }
 
   @Override
   protected <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
+    // <1> 刷入批处理语句
     flushStatements();
     Configuration configuration = ms.getConfiguration();
+    // 创建 StatementHandler 对象
     StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, null, boundSql);
+    // 获得 Connection 对象
     Connection connection = getConnection(ms.getStatementLog());
+    // 创建 Statement 或 PrepareStatement 对象
     Statement stmt = handler.prepare(connection, transaction.getTimeout());
+    // 设置 Statement ，如果执行完成，则进行自动关闭
+    stmt.closeOnCompletion();
+    // 设置 SQL 上的参数，例如 PrepareStatement 对象上的占位符
     handler.parameterize(stmt);
-    return handler.<E>queryCursor(stmt);
+    // 执行 StatementHandler  ，进行读操作
+    return handler.queryCursor(stmt);
   }
 
   //TODO 看到这里 http://svip.iocoder.cn/MyBatis/executor-1/#6-4-doFlushStatements

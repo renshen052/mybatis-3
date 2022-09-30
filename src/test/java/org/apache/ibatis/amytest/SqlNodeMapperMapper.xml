@@ -21,6 +21,11 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="org.apache.ibatis.amytest.SqlNodeMapper">
+    <insert id="insertSingleSubject">
+        insert into subject (id,name,age,height,weight) values (
+        #{id},#{name},#{age},#{height},#{weight}
+        );
+    </insert>
     <select id="getSubject" resultType="org.apache.ibatis.amytest.MyPrimitiveSubject">
         SELECT * FROM subject WHERE id in
         <foreach collection="list" item="id" open="(" close=")" separator=",">
